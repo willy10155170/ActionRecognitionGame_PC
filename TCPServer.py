@@ -93,6 +93,21 @@ class TCPServer:
         # send_handler
         print("connect!")
 
+    def _action_predict(self):
+        if len(self.left_joint_set) == 20:
+            data = np.array(self.left_joint_set)
+            data = data.reshape(1, 20, 39)
+            left_results = predict_model.predict(data)[0]
+            self.left_joint_set = self.left_joint_set[1:]
+
+        if len(self.right_joint_set) == 20:
+            data = np.array(self.right_joint_set)
+            data = data.reshape(1, 20, 39)
+            right_results = predict_model.predict(data)[0]
+            self.right_joint_set = self.right_joint_set[1:]
+
+        return left_results, right_results
+
     def start_tcp_server(self):
         serverPort = 6969
         serverScoket = socket(AF_INET, SOCK_STREAM)
@@ -126,6 +141,8 @@ class TCPServer:
         start = time.time()
         self.timer = 90
         joint_set = []
+        self.left_joint_set = []
+        self.right_joint_set = []
         self.unity_server.connect()
         # self.client_list[0][1].start()
         # self.client_list[1][1].start()
@@ -137,23 +154,30 @@ class TCPServer:
         while True:
             if frame_data.empty() is False:
                 is_end.put(self.game_status)
-                jj = frame_data.get()
-                #print(jj)
-                joint_set.append(jj)
-                if len(joint_set) < 50:
-                    print(len(joint_set))
+                data = frame_data.get()
+                self.left_joint_set.apend(data[0])
+                self.right_joint_set.append(data[1])
+                left_action, right_action = self._action_predict()
+                #send skill action to unity
+
+
+                # jj = frame_data.get()
+                # #print(jj)
+                # joint_set.append(jj)
+                # if len(joint_set) < 50:
+                #     print(len(joint_set))
             
 
-            if len(joint_set) == 50:
-                JointData = np.array(joint_set)
-                JointData = JointData.reshape(1,50,39)
-                results = predict_model.predict(JointData)
-                print(results)
-                self.unity_server.skill('Attack')
-                # max_value = max(results)
-                # max_index = results.index(max_value)
-                # print(max_index)
-                joint_set = joint_set[1:]
+            # if len(joint_set) == 50:
+            #     JointData = np.array(joint_set)
+            #     JointData = JointData.reshape(1,50,39)
+            #     results = predict_model.predict(JointData)
+            #     print(results)
+            #     self.unity_server.skill('Attack')
+            #     # max_value = max(results)
+            #     # max_index = results.index(max_value)
+            #     # print(max_index)
+            #     joint_set = joint_set[1:]
 
             end = time.time()
             self.timer = 90 - (end - start)
