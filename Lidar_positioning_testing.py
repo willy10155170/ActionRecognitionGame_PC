@@ -353,7 +353,9 @@ class frame_queue():
                 except Exception as e:
                     print(e)
                     pass
-            
+
+                #Joint_set  = [left_joint_set, right_joint_set]
+
                 if len(JointSet) != 0:
                     self.frame_data.put(JointSet)
     
