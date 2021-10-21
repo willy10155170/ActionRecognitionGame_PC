@@ -140,9 +140,9 @@ class TCPServer:
                 left_action, right_action = self._action_predict()
                 #send skill action to unity
 
-                self.lock.acquire()
-                self.game_status = self.unity_server.is_gaming()
-                self.lock.release()
+            self.lock.acquire()
+            self.game_status = self.unity_server.is_gaming()
+            self.lock.release()
 
             if self.game_status:
                 is_end.put(self.game_status)
