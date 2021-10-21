@@ -369,7 +369,7 @@ class frame_queue():
                 
                 
                 if len(left_JointSet) != 0 and len(right_JointSet) != 0:
-                    JointSet = np.hstack([np.array(left_JointSet),np.array(right_JointSet)]
+                    JointSet = np.hstack([np.array(left_JointSet),np.array(right_JointSet)])
                     self.frame_data.put(JointSet)
     
                 
@@ -390,6 +390,9 @@ class frame_queue():
     
                 if self.game_status.empty() is False:
                     status = self.game_status.get()
+                else:
+                    status = False
+
                 if status is True:
                     break
     
