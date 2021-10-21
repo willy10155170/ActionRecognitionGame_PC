@@ -49,7 +49,7 @@ class TCPServer:
                         print(text)
                         client_msg = 'player {player_num} 發動健美\n'.format(player_num=client_num)
                         client_socket.send(client_msg.encode())
-                        enemy_msg = 'player {enemy_num} 發動健美\n'.format(enemy_num=client_num)
+                        enemy_msg = 'player {player_num} 發動健美\n'.format(player_num=client_num)
                         enemy_socket.send(enemy_msg.encode())
 
                 elif command == "1":

@@ -154,7 +154,7 @@ def Cor_Normalization(JointSet):
 # In[6]:
 
 
-def Cal(image,lmList,aligned_depth_frame,color_intrin,ht):
+def Cal(image,lmList,aligned_depth_frame,color_intrin,ht,Direc):
     JointSet = []
     JointDepth = []
     World_cor = []
@@ -168,7 +168,10 @@ def Cal(image,lmList,aligned_depth_frame,color_intrin,ht):
         if len(lmList) !=0:
             for i in range(33):
                 try:
-                    depth = aligned_depth_frame.get_distance(int(lmList[i][1]),int(lmList[i][2]))
+                    if Direc == 1:
+                        depth = aligned_depth_frame.get_distance(int(lmList[i][1]+480),int(lmList[i][2]))
+                    else:
+                        depth = aligned_depth_frame.get_distance(int(lmList[i][1]),int(lmList[i][2]))
                     dx ,dy, dz = rs.rs2_deproject_pixel_to_point(color_intrin, [int(lmList[i][1]),int(lmList[i][2])], depth)
                     distance = math.sqrt(((dx)**2) + ((dy)**2) + ((dz)**2))
                 except:
@@ -295,7 +298,8 @@ class frame_queue():
         align_to = rs.stream.color
         align = rs.align(align_to)
     
-        detector = poseDetector()
+        right_detector = poseDetector()
+        left_detector = poseDetector()
         pFps = 0
         #file = open('C:\\Users\\Ray\\Desktop\\NTOU\\Graduation_Project\\BodyData\\Test_Data.txt','w')
         ht = 0
@@ -335,29 +339,40 @@ class frame_queue():
     
                 depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
     
+                
+                bg_right = bg_removed[0:540,0:480,0:3]
+                bg_left = bg_removed[0:540,480:960,0:3]
+                
+                image1 = left_detector.findPose(bg_left)
+                image2 = right_detector.findPose(bg_right)
+                lmList1 = left_detector.findPosition(bg_left)
+                lmList2 = right_detector.findPosition(bg_right)
+                
+                
+#                 image = detector.findPose(bg_removed)
+#                 lmList = detector.findPosition(image)
+#                 height,width,channel = image.shape
+#                 total = height+width
     
-    
-                image = detector.findPose(bg_removed)
-                lmList = detector.findPosition(image)
-                height,width,channel = image.shape
-                total = height+width
-    
-                JointSet = []
-                his_joint = np.zeros((13,4))
+                left_JointSet = []
+                right_JointSet = []
     
                 try:
                     if len(lmList) !=0:
     
-                        JointSet = Cal(image,lmList,aligned_depth_frame,color_intrin,ht)
+                        left_JointSet = Cal(image1,lmList1,aligned_depth_frame,color_intrin,ht,0)
+                        right_JointSet = Cal(image2,lmList2,aligned_depth_frame,color_intrin,ht,1)
     
                 except Exception as e:
                     print(e)
                     pass
-
-                #Joint_set  = [left_joint_set, right_joint_set]
-
-                if len(JointSet) != 0:
+                
+                
+                if len(left_JointSet) != 0 and len(right_JointSet) != 0:
+                    JointSet = np.hstack([np.array(left_JointSet),np.array(right_JointSet)])
                     self.frame_data.put(JointSet)
+    
+                
     
                 ht += 1
                 cFps = time.time()
@@ -375,6 +390,9 @@ class frame_queue():
     
                 if self.game_status.empty() is False:
                     status = self.game_status.get()
+                else:
+                    status = False
+
                 if status is True:
                     break
     
