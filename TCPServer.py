@@ -14,11 +14,10 @@ class TCPServer:
         self.right_joint_set = []
         self.left_joint_set = []
         self.client_list = []
-        self.player_health = [100, 100]
-        self.timer = 90
         self.client_num = 0
         self.game_status = False
         self.unity_server = unity_skill.unity()
+        self.lock = threading.Lock()
 
     def _handle_client(self, client_socket, client_num):
         if client_num == 0:
@@ -34,26 +33,23 @@ class TCPServer:
                 command = request.split(' ')[0]
                 results = request.split(' ')[1].split('\n')
                 if command == '0':
-                    if '攻擊' in results:
-                        self.unity_server.skill('attack')
+                    if '挑釁' in results:
+                        self.unity_server.skill('skill_3')
                         print('keyword detected')
-                        text = 'player {player_num} attacking...'.format(player_num=client_num)
+                        text = 'player {player_num} 發動挑釁...'.format(player_num=client_num)
                         print(text)
-                        self.player_health[enemy] -= 100
-                        print(self.player_health)
-                        client_msg = '對 player {enemy_num} 發動語音攻擊\n'.format(enemy_num=enemy)
+                        client_msg = '對 player {enemy_num} 發動挑釁\n'.format(enemy_num=enemy)
                         client_socket.send(client_msg.encode())
-                        enemy_msg = '受到 player {player_num} 的語音攻擊\n'.format(player_num=client_num)
+                        enemy_msg = '受到 player {player_num} 的挑釁\n'.format(player_num=client_num)
                         enemy_socket.send(enemy_msg.encode())
-                    elif '防禦' in results:
-                        self.unity_server.skill('defense')
+                    elif '健美' in results:
+                        self.unity_server.skill('skill_4')
                         print('keyword detected')
-                        # print('defending...')
-                        text = 'player {player_num} defending...'.format(player_num=client_num)
+                        text = 'player {player_num} 發動健美...'.format(player_num=client_num)
                         print(text)
-                        client_msg = 'player {player_num} 發動語音防禦\n'.format(player_num=client_num)
+                        client_msg = 'player {player_num} 發動健美\n'.format(player_num=client_num)
                         client_socket.send(client_msg.encode())
-                        enemy_msg = 'player {enemy_num} 發動語音防禦\n'.format(enemy_num=client_num)
+                        enemy_msg = 'player {enemy_num} 發動健美\n'.format(enemy_num=client_num)
                         enemy_socket.send(enemy_msg.encode())
 
                 elif command == "1":
@@ -61,22 +57,7 @@ class TCPServer:
                         self.unity_server.skill('jump')
                         print('player 跳了起來!')
             except BlockingIOError:
-                if self.timer <= 0:
-                    self.game_status = True
-                    if self.player_health[0] > self.player_health[1]:
-                        print('player 0 win\nplayer 1 loss')
-                    elif self.player_health[0] == self.player_health[1]:
-                        print('draw')
-                    else:
-                        print('player 1 win\nplayer 0 loss')
-                    break
-                if self.player_health[0] <= 0:
-                    self.game_status = True
-                    print('player 0 loss')
-                    break
-                elif self.player_health[1] <= 0:
-                    self.game_status = True
-                    print('player 1 loss')
+                if self.game_status:
                     break
         print('player{} end'.format(client_num))
 
@@ -101,13 +82,13 @@ class TCPServer:
         if len(self.left_joint_set) == 20:
             data = np.array(self.left_joint_set)
             data = data.reshape(1, 20, 39)
-            left_results = predict_model.predict(data)[0]
+            left_results = ActionPredict.Model().predict_model.predict(data)[0]
             self.left_joint_set = self.left_joint_set[1:]
 
         if len(self.right_joint_set) == 20:
             data = np.array(self.right_joint_set)
             data = data.reshape(1, 20, 39)
-            right_results = predict_model.predict(data)[0]
+            right_results = ActionPredict.Model().predict_model.predict(data)[0]
             self.right_joint_set = self.right_joint_set[1:]
 
         return left_results, right_results
@@ -141,9 +122,6 @@ class TCPServer:
 
     def fight(self):
         print('Game Start')
-        predict_model = ActionPredict.Model()
-        start = time.time()
-        self.timer = 90
         self.unity_server.connect()
         # self.client_list[0][1].start()
         # self.client_list[1][1].start()
@@ -156,16 +134,15 @@ class TCPServer:
             if frame_data.empty() is False:
                 is_end.put(self.game_status)
                 data = frame_data.get()
-                self.left_joint_set.apend(data[0])
+                self.left_joint_set.append(data[0])
                 self.right_joint_set.append(data[1])
                 left_action, right_action = self._action_predict()
                 #send skill action to unity
 
-            end = time.time()
-            self.timer = 90 - (end - start)
-            print(self.timer)
-            if self.timer < 0:
-                break
+            self.lock.acquire()
+            self.game_status = self.unity_server.is_gaming()
+            self.lock.release()
+
             if self.game_status:
                 is_end.put(self.game_status)
                 self.unity_server.close()
