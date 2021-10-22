@@ -1,6 +1,6 @@
 import socket
 import numpy as np
-from time import sleep
+
 class unity:
     def __init__(self,host="127.0.0.1",port=12333):
         self.host = host
@@ -16,25 +16,15 @@ class unity:
     
     def skill(self,skill):
         '''
-        light_punch
-        punch
+        attack
         defense
         jump
-        damaged
-        win
-        lose
+        skill_1
+        skill_2
+        skill_3
+        skill_4
         '''
         self.client.send(bytes(skill,"utf-8"))
 
     def is_gaming(self):
          return self.is_gaming
-
-if __name__ == "__main__":
-    uni = unity() # 宣告 unity(host,port)
-    uni.connect()
-    msg = 'punch'
-    while(msg!='end'):
-        uni.skill(msg)
-        print(uni.is_gaming)
-        msg = input()
-    uni.close() # socket close
