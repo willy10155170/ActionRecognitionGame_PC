@@ -16,7 +16,8 @@ class TCPServer:
         self.client_list = []
         self.client_num = 0
         self.game_status = False
-        self.unity_server = unity_skill.unity()
+        self.unity_player0 = unity_skill.unity(port=12333)
+        self.unity_player1 = unity_skill.unity(port=12334)
         self.lock = threading.Lock()
 
     def _handle_client(self, client_socket, client_num):
@@ -34,7 +35,7 @@ class TCPServer:
                 results = request.split(' ')[1].split('\n')
                 if command == '0':
                     if '挑釁' in results:
-                        self.unity_server.skill('skill_3')
+                        self._send_action(client_num, 5)
                         print('keyword detected')
                         text = 'player {player_num} 發動挑釁...'.format(player_num=client_num)
                         print(text)
@@ -43,7 +44,7 @@ class TCPServer:
                         enemy_msg = '受到 player {player_num} 的挑釁\n'.format(player_num=client_num)
                         enemy_socket.send(enemy_msg.encode())
                     elif '健美' in results:
-                        self.unity_server.skill('skill_4')
+                        self._send_action(client_num, 6)
                         print('keyword detected')
                         # print('defending...')
                         text = 'player {player_num} defending...'.format(player_num=client_num)
@@ -55,7 +56,7 @@ class TCPServer:
 
                 elif command == "1":
                     if 'jump' in results:
-                        self.unity_server.skill('jump')
+                        self._send_action(client_num, 7)
                         print('player 跳了起來!')
             except BlockingIOError:
                 if self.game_status:
@@ -83,16 +84,37 @@ class TCPServer:
         if len(self.left_joint_set) == 20:
             data = np.array(self.left_joint_set)
             data = data.reshape(1, 20, 39)
-            left_results = ActionPredict.Model().predict_model.predict(data)[0]
+            left_results = ActionPredict.Model().predict_model.predict(data)
             self.left_joint_set = self.left_joint_set[1:]
 
         if len(self.right_joint_set) == 20:
             data = np.array(self.right_joint_set)
             data = data.reshape(1, 20, 39)
-            right_results = ActionPredict.Model().predict_model.predict(data)[0]
+            right_results = ActionPredict.Model().predict_model.predict(data)
             self.right_joint_set = self.right_joint_set[1:]
 
         return left_results, right_results
+
+    def _send_action(self, player, action):
+        if player == 0:
+            send = self.unity_player0
+        else:
+            send = self.unity_player1
+
+        if action == 1:
+            send.skill("attack")
+        elif action == 2:
+            send.skill("defense")
+        elif action == 3:
+            send.skill("skill_1")
+        elif action == 4:
+            send.skill("skill_2")
+        elif action == 5:
+            send.skill("skill_3")
+        elif action == 6:
+            send.skill("skill_4")
+        elif action == 7:
+            send.skill("jump")
 
     def start_tcp_server(self):
         serverPort = 6969
@@ -123,7 +145,8 @@ class TCPServer:
 
     def fight(self):
         print('Game Start')
-        self.unity_server.connect()
+        self.unity_player0.connect()
+        self.unity_player1.connect()
         # self.client_list[0][1].start()
         # self.client_list[1][1].start()
         frame_data = queue.Queue()
@@ -138,13 +161,15 @@ class TCPServer:
                 self.left_joint_set.append(data[0])
                 self.right_joint_set.append(data[1])
                 left_action, right_action = self._action_predict()
-                #send skill action to unity
+                self._send_action(0, left_action)
+                self._send_action(1, right_action)
 
             self.lock.acquire()
-            self.game_status = self.unity_server.is_gaming()
+            self.game_status = self.unity_palyer0.is_gaming()
             self.lock.release()
 
             if self.game_status:
                 is_end.put(self.game_status)
-                self.unity_server.close()
+                self.unity_player0.close()
+                self.unity_player1.close()
                 break
