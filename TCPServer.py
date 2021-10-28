@@ -92,8 +92,17 @@ class TCPServer:
             data = data.reshape(1, 20, 39)
             right_results = ActionPredict.Model().predict_model.predict(data)
             self.right_joint_set = self.right_joint_set[1:]
-
-        return left_results, right_results
+        leftmax=max(left_results)
+        rightmax=max(right_results)
+        if leftmax>=0.5:
+            left_index=left_results.index(leftmax)
+        else:
+            left_index=None
+        if rightmax >=0.5:
+            right_index=right_results.index(rightmax)
+        else:
+            right_index=None
+        return left_index, right_index
 
     def _send_action(self, player, action):
         if player == 0:
