@@ -13,7 +13,16 @@ class unity:
     def close(self):
         self.client.send(bytes("end","utf-8"))
         self.client.close()
-    
+
+    def start(self):
+        self.client.send(bytes("start","utf-8"))
+        
+    def pause(self):
+        self.client.send(bytes("pause","utf-8"))
+
+    def resume(self):
+        self.client.send(bytes("resume","utf-8"))
+        
     def skill(self,skill):
         '''
         attack
