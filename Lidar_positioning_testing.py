@@ -378,13 +378,13 @@ class frame_queue():
                 grey_color = 153
                 depth_image_3d = np.dstack((depth_image,depth_image,depth_image))
                 #depth image is 1 channel, color is 3 channels
-                bg_removed = np.where((depth_image_3d > clipping_distance) | (depth_image_3d <= 0),grey_color, color_image)
+                # bg_removed = np.where((depth_image_3d > clipping_distance) | (depth_image_3d <= 0),grey_color, color_image)
     
                 depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
     
                 
-                bg_right = bg_removed[0:540,0:480,0:3]
-                bg_left = bg_removed[0:540,480:960,0:3]
+                bg_right = color_image[0:540,0:480,0:3]
+                bg_left = color_image[0:540,480:960,0:3]
                 
                 image1 = left_detector.findPose(bg_left)
                 image2 = right_detector.findPose(bg_right)
@@ -398,18 +398,27 @@ class frame_queue():
 #                 total = height+width
 
                 JointSet = []
-                JointSet1 = []
-                JointSet2 = []
-    
-                try:
+                JointSet1 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+                JointSet2 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+
+                bg_right = color_image[0:540,0:480,0:3]
+                bg_left = color_image[0:540,480:960,0:3]
+
+                
+                image1 = left_detector.findPose(bg_left)
+                image2 = right_detector.findPose(bg_right)
+                lmList1 = left_detector.findPosition(bg_left)
+                lmList2 = right_detector.findPosition(bg_right)
+                
+                try:        
                     if len(lmList1) !=0:
                         JointSet1 = Cal(bg_left,lmList1,aligned_depth_frame,color_intrin,ht,0)
-                    else:
-                        JointSet1 = []
+    #                 else:
+    #                     JointSet1 = []
                     if len(lmList2) !=0:
                         JointSet2 = Cal(bg_right,lmList2,aligned_depth_frame,color_intrin,ht,1)
-                    else:
-                        JointSet2 = []
+    #                 else:
+    #                     JointSet2 = []
                     end = time.time()
                     ht = end-start
     
@@ -417,6 +426,7 @@ class frame_queue():
                     print(e)
                     pass
                 
+
                 
                 
                 JointSet.append(JointSet1)
