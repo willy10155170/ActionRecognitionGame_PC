@@ -19,6 +19,7 @@ class TCPServer:
         self.unity_player0 = unity_skill.unity(port=12333)
         self.unity_player1 = unity_skill.unity(port=12334)
         self.lock = threading.Lock()
+        self.model = ActionPredict.Model()
 
     def _handle_client(self, client_socket, client_num):
         if client_num == 0:
@@ -83,14 +84,18 @@ class TCPServer:
         right_results = None
         if len(self.left_joint_set) == 20:
             data = np.array(self.left_joint_set)
-            data = data.reshape(1, 20, 39)
-            left_results = ActionPredict.Model().predict_model.predict(data)
+            try:
+                left_results = self.model.predict(data)
+            except:
+                pass
             self.left_joint_set = self.left_joint_set[1:]
 
         if len(self.right_joint_set) == 20:
             data = np.array(self.right_joint_set)
-            data = data.reshape(1, 20, 39)
-            right_results = ActionPredict.Model().predict_model.predict(data)
+            try:
+                right_results = self.model.predict(data)
+            except:
+                pass
             self.right_joint_set = self.right_joint_set[1:]
 
         return left_results, right_results
