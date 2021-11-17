@@ -86,17 +86,17 @@ class TCPServer:
             data = np.array(self.left_joint_set)
             try:
                 left_results = self.model.predict(data)
-            except:
-                pass
-            self.left_joint_set = self.left_joint_set[1:]
+                self.left_joint_set = self.left_joint_set[1:]
+            except Exception as e:
+                print(e)
 
         if len(self.right_joint_set) == 20:
             data = np.array(self.right_joint_set)
             try:
                 right_results = self.model.predict(data)
-            except:
-                pass
-            self.right_joint_set = self.right_joint_set[1:]
+                self.right_joint_set = self.right_joint_set[1:]
+            except Exception as e:
+                print(e)
 
         return left_results, right_results
 
@@ -152,13 +152,14 @@ class TCPServer:
         print('Game Start')
         self.unity_player0.connect()
         self.unity_player1.connect()
-        # self.client_list[0][1].start()
-        # self.client_list[1][1].start()
+        self.client_list[0][1].start()
+        self.client_list[1][1].start()
         frame_data = queue.Queue()
         is_end = queue.Queue()
         Lidar_data = Lidar_positioning_testing.frame_queue(frame_data, is_end)
         lidar_thread = threading.Thread(target=Lidar_data.get_frame_data, args=())
         lidar_thread.start()
+        self.unity_player0.start()
         while True:
             if frame_data.empty() is False:
                 is_end.put(self.game_status)
@@ -169,9 +170,7 @@ class TCPServer:
                 self._send_action(0, left_action)
                 self._send_action(1, right_action)
 
-            self.lock.acquire()
-            self.game_status = self.unity_palyer0.is_gaming()
-            self.lock.release()
+            self.game_status = self.unity_player0.is_gaming()
 
             if self.game_status:
                 is_end.put(self.game_status)
