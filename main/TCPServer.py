@@ -35,25 +35,26 @@ class TCPServer:
                 command = request.split(' ')[0]
                 results = request.split(' ')[1].split('\n')
                 if command == '0':
-                    if '挑釁' in results:
-                        self._send_action(client_num, 5)
-                        print('keyword detected')
-                        text = 'player {player_num} 發動挑釁...'.format(player_num=client_num)
-                        print(text)
-                        client_msg = '對 player {enemy_num} 發動挑釁\n'.format(enemy_num=enemy)
-                        client_socket.send(client_msg.encode())
-                        enemy_msg = '受到 player {player_num} 的挑釁\n'.format(player_num=client_num)
-                        enemy_socket.send(enemy_msg.encode())
-                    elif '健美' in results:
-                        self._send_action(client_num, 6)
-                        print('keyword detected')
-                        # print('defending...')
-                        text = 'player {player_num} defending...'.format(player_num=client_num)
-                        print(text)
-                        client_msg = 'player {player_num} 發動健美\n'.format(player_num=client_num)
-                        client_socket.send(client_msg.encode())
-                        enemy_msg = 'player {player_num} 發動健美\n'.format(player_num=client_num)
-                        enemy_socket.send(enemy_msg.encode())
+                    for result in results:
+                        if '挑釁' in result:
+                            self._send_action(client_num, 5)
+                            print('keyword detected')
+                            text = 'player {player_num} 發動挑釁...'.format(player_num=client_num)
+                            print(text)
+                            client_msg = '對 player {enemy_num} 發動挑釁\n'.format(enemy_num=enemy)
+                            client_socket.send(client_msg.encode())
+                            enemy_msg = '受到 player {player_num} 的挑釁\n'.format(player_num=client_num)
+                            enemy_socket.send(enemy_msg.encode())
+                        elif '健美' in result:
+                            self._send_action(client_num, 6)
+                            print('keyword detected')
+                            # print('defending...')
+                            text = 'player {player_num} defending...'.format(player_num=client_num)
+                            print(text)
+                            client_msg = 'player {player_num} 發動健美\n'.format(player_num=client_num)
+                            client_socket.send(client_msg.encode())
+                            enemy_msg = 'player {player_num} 發動健美\n'.format(player_num=client_num)
+                            enemy_socket.send(enemy_msg.encode())
 
                 elif command == "1":
                     if 'jump' in results:
