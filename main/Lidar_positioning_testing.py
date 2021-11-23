@@ -169,8 +169,9 @@ def Cor_Normalization(JointSet):
     sum_z = 0
     Max_x = 0
     Min_x = 999
-    Max_y = 0
-    Min_y = 999
+
+    Max_y = JointSet[0][2]
+    Min_y = (JointSet[11][2] + JointSet[12][2]) / 2
 
     for i in range(13):
         sum_x += JointSet[i][1]
@@ -180,10 +181,7 @@ def Cor_Normalization(JointSet):
             Max_x = JointSet[i][1]
         if JointSet[i][1] < Min_x:
             Min_x = JointSet[i][1]
-        if JointSet[i][2]> Max_y:
-            Max_y = JointSet[i][2]
-        if JointSet[i][2] < Min_y:
-            Min_y = JointSet[i][2]
+
 
     for i in range(13):
         JointSet[i][1] = Normalizing(JointSet[i][1],Max_x,Min_x,sum_x)
