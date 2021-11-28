@@ -5,7 +5,7 @@ class unity:
         self.host = host
         self.port = port
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.isgaming = False
+        self.isgaming = "False"
 
     def connect(self):
         self.client.connect((self.host, self.port))
@@ -37,7 +37,10 @@ class unity:
         skill_4
         '''
         self.client.send(bytes(skill,"utf-8"))
-        self.isgaming = bool(self.client.recv(1024).decode("utf-8"))
+        self.isgaming = self.client.recv(1024).decode("utf-8")
 
     def is_gaming(self):
-         return self.isgaming
+        if self.isgaming == "True":
+            return True
+        else:
+            return False
