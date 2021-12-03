@@ -16,4 +16,3 @@ class Model:
             return 4
         else:
             return re + 1
-        return np.argmax(result) + 1
