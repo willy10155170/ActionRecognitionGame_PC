@@ -49,7 +49,7 @@ with open("./x_train.txt", "a") as fi:
     for i in wait_data:
         fi.write((str(i) + "\n"))
 
-with open("./y_train_left_1202.txt", "a") as fi:
+with open("./y_train.txt", "a") as fi:
     for i in range(0, 1000):
         fi.write(str([1, 0, 0, 0]) + "\n")
 

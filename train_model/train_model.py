@@ -27,7 +27,7 @@ with open("./x_train.txt", "r") as f:
         data = json.loads(data)
         x_train.append(data)
 
-with open("./y_train_left_1202.txt", "r") as f:
+with open("./y_train.txt", "r") as f:
     for data in f:
         data = json.loads(data)
         y_train.append(data)
