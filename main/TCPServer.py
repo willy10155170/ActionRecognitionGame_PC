@@ -86,16 +86,18 @@ class TCPServer:
         if len(self.left_joint_set) == 20:
             data = np.array(self.left_joint_set)
             try:
+                print("left:")
                 left_results = self.model.predict(data)
-                self.left_joint_set = self.left_joint_set[1:]
+                self.left_joint_set = self.left_joint_set[3:]
             except Exception as e:
                 print(e)
 
         if len(self.right_joint_set) == 20:
             data = np.array(self.right_joint_set)
             try:
+                print("right:")
                 right_results = self.model.predict(data)
-                self.right_joint_set = self.right_joint_set[1:]
+                self.right_joint_set = self.right_joint_set[3:]
             except Exception as e:
                 print(e)
 
@@ -113,8 +115,8 @@ class TCPServer:
             send.skill("defense")
         elif action == 3:
             send.skill("skill_1")
-        elif action == 4:
-            send.skill("skill_2")
+        # elif action == 4:
+        #     send.skill("skill_2")
         elif action == 5:
             send.skill("skill_3")
         elif action == 6:
@@ -129,7 +131,6 @@ class TCPServer:
         serverScoket.setblocking(False)
         serverScoket.listen(3)
         print('The server is ready to receive')
-        #client_counter = 0
         while True:
             try:
                 connectionSocket, addr = serverScoket.accept()
@@ -138,9 +139,6 @@ class TCPServer:
                 print('player {player} joined'.format(player=self.client_num))
                 if self.client_num == 1:
                     print('0')
-                    # self.client_list[0][1].start()
-                    # self.client_list[1][1].start()
-                #client_counter += 1
                 self.client_num += 1
             except BlockingIOError:
                 if self.client_num == 2:
@@ -165,8 +163,8 @@ class TCPServer:
             if frame_data.empty() is False:
                 is_end.put(self.game_status)
                 data = frame_data.get()
-                self.left_joint_set.append(data[0])
-                self.right_joint_set.append(data[1])
+                self.left_joint_set.append(np.array(data[0]).astype(float))
+                self.right_joint_set.append(np.array(data[1]).astype(float))
                 left_action, right_action = self._action_predict()
                 self._send_action(0, left_action)
                 self._send_action(1, right_action)

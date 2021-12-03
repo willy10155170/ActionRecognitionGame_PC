@@ -5,7 +5,7 @@ def main():
     print('press any key to start the game:')
     #input()
     test = TCPServer.TCPServer()
-    #test.start_tcp_server()
+    test.start_tcp_server()
     test.fight()
 
 
